@@ -6,10 +6,12 @@ const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
 const globalErrorMiddleware = require("./middlewares/errorMiddleware");
 const AppError = require("./utils/appError");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 // ROUTES MIDDLEWARE
 app.use("/api/v1/users", userRoutes);

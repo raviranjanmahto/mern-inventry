@@ -1,6 +1,21 @@
 const User = require("../models/userModel");
 const AppError = require("../utils/appError");
 const handleAsync = require("../utils/handleAsync");
+const jwt = require("jsonwebtoken");
+
+const generateToken = id => {
+  return jwt.sign({ id }, process.env.TOKEN_SECRET, {
+    expiresIn: process.env.TOKEN_EXPIREIN,
+  });
+};
+
+const cookieOption = {
+  expires: new Date(
+    Date.now() + process.env.COOKIE_EXPIREIN * 24 * 60 * 60 * 1000
+  ),
+  httpOnly: true,
+};
+if (process.env.NODE_ENV === "production") cookieOption.secure = true;
 
 exports.signUp = handleAsync(async (req, res, next) => {
   const { name, email, password, photo, phone } = req.body;
@@ -13,8 +28,12 @@ exports.signUp = handleAsync(async (req, res, next) => {
 
   const user = await User.create({ name, email, password, photo, phone });
 
+  const token = generateToken(user._id);
+  res.cookie("token", token, cookieOption);
+
   res.status(201).json({
     status: "success",
+    token,
     user: {
       id: user._id,
       email: user.email,
@@ -35,8 +54,12 @@ exports.login = handleAsync(async (req, res, next) => {
   if (!user || !(await user.passwordMatch(password)))
     return next(new AppError("Invalid email or password!"));
 
+  const token = generateToken(user._id);
+  res.cookie("token", token, cookieOption);
+
   res.status(200).json({
     status: "success",
+    token,
     user: {
       id: user._id,
       email: user.email,
