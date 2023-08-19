@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
@@ -32,7 +33,7 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       match: [
-        /^(\()?\d{3}(\))?(-|\s)?\d{3}(-|\s)\d{4}$/,
+        /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im,
         "Enter a valid phone number!",
       ],
     },
@@ -43,6 +44,19 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+userSchema.pre("save", async function (next) {
+  // Only run this function when password is actually modified!
+  if (!this.isModified("password")) return next();
+
+  // Hash the password with cost of 11
+  this.password = await bcrypt.hash(this.password, 11);
+  next();
+});
+
+userSchema.methods.passwordMatch = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;
