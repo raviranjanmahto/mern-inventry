@@ -10,5 +10,10 @@ router.post("/logout", userController.logout);
 router.get("/profile", authMiddleware.protect, userController.getProfile);
 
 router.patch("/update", authMiddleware.protect, userController.updateProfile);
+router.patch(
+  "/password",
+  authMiddleware.protect,
+  userController.updatePassword
+);
 
 module.exports = router;

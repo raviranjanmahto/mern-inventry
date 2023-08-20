@@ -92,17 +92,15 @@ exports.getProfile = handleAsync(async (req, res, next) => {
 
 exports.updateProfile = handleAsync(async (req, res, next) => {
   // 1) Taking limited fields
-  const { name, password, photo, phone, bio } = req.body;
+  const { name, photo, phone, bio } = req.body;
 
   // If field then put that field in req.user else ignore
   if (name) req.user.name = name;
-  if (password) req.user.password = password;
   if (photo) req.user.photo = photo;
   if (phone) req.user.phone = phone;
   if (bio) req.user.bio = bio;
 
   await req.user.save();
-  req.user.password = undefined;
 
   res.status(200).json({
     status: "success",
@@ -115,4 +113,21 @@ exports.updateProfile = handleAsync(async (req, res, next) => {
       bio: req.user.bio,
     },
   });
+});
+
+exports.updatePassword = handleAsync(async (req, res, next) => {
+  const { password, newPassword } = req.body;
+  if (!password || !newPassword)
+    return next(new AppError("All fields are required!", 401));
+
+  const user = await User.findById(req.user._id).select("+password");
+
+  if (!(await user.passwordMatch(password)))
+    return next(new AppError("Invalid current password!", 401));
+
+  user.password = newPassword;
+  await user.save();
+  user.password = undefined;
+
+  res.status(200).json({ status: "success" });
 });
