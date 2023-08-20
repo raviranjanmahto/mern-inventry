@@ -144,7 +144,17 @@ exports.forgotPassword = handleAsync(async (req, res, next) => {
   if (!user)
     return next(new AppError("There is no user with email address.", 404));
 
-  const resetToken = user.createPasswordResetToken();
+  const resetToken =
+    crypto.randomBytes(32).toString("hex") + "raviranjanMahto" + user._id;
+
+  const hashToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  user.passwordResetToken = hashToken;
+  user.passwordResetExpires = Date.now() + 5 * 60 * 1000;
+
   await user.save();
 
   const resetURL = `${process.env.BASE_URL}/api/v1/users/reset/${resetToken}`;
