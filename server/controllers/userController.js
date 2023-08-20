@@ -29,7 +29,7 @@ exports.signUp = handleAsync(async (req, res, next) => {
   const user = await User.create({ name, email, password, photo, phone });
 
   const token = generateToken(user._id);
-  res.cookie("token", token, cookieOption);
+  await res.cookie("token", token, cookieOption);
 
   res.status(201).json({
     status: "success",
@@ -55,7 +55,7 @@ exports.login = handleAsync(async (req, res, next) => {
     return next(new AppError("Invalid email or password!"));
 
   const token = generateToken(user._id);
-  res.cookie("token", token, cookieOption);
+  await res.cookie("token", token, cookieOption);
 
   res.status(200).json({
     status: "success",
@@ -67,6 +67,52 @@ exports.login = handleAsync(async (req, res, next) => {
       photo: user.photo,
       phone: user.phone,
       bio: user.bio,
+    },
+  });
+});
+
+exports.logout = handleAsync(async (req, res) => {
+  await res.cookie("token", "", { httpOnly: true, expires: new Date(0) });
+  res.status(200).json({ status: "success" });
+});
+
+exports.getProfile = handleAsync(async (req, res, next) => {
+  res.status(200).json({
+    status: "success",
+    user: {
+      id: req.user._id,
+      email: req.user.email,
+      name: req.user.name,
+      photo: req.user.photo,
+      phone: req.user.phone,
+      bio: req.user.bio,
+    },
+  });
+});
+
+exports.updateProfile = handleAsync(async (req, res, next) => {
+  // 1) Taking limited fields
+  const { name, password, photo, phone, bio } = req.body;
+
+  // If field then put that field in req.user else ignore
+  if (name) req.user.name = name;
+  if (password) req.user.password = password;
+  if (photo) req.user.photo = photo;
+  if (phone) req.user.phone = phone;
+  if (bio) req.user.bio = bio;
+
+  await req.user.save();
+  req.user.password = undefined;
+
+  res.status(200).json({
+    status: "success",
+    user: {
+      id: req.user._id,
+      email: req.user.email,
+      name: req.user.name,
+      photo: req.user.photo,
+      phone: req.user.phone,
+      bio: req.user.bio,
     },
   });
 });
