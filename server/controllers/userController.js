@@ -5,6 +5,10 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 
+exports.ping = (req, res) => {
+  res.status(200).json({ status: "success" });
+};
+
 const generateToken = id => {
   return jwt.sign({ id }, process.env.TOKEN_SECRET, {
     expiresIn: process.env.TOKEN_EXPIREIN,
@@ -145,7 +149,11 @@ exports.forgotPassword = handleAsync(async (req, res, next) => {
     return next(new AppError("There is no user with email address.", 404));
 
   const resetToken =
-    crypto.randomBytes(32).toString("hex") + "raviranjanMahto" + user._id;
+    "eyJhbGciOi" +
+    crypto.randomBytes(32).toString("hex") +
+    user._id +
+    "V_adQssw57" +
+    "raviranjanMahto";
 
   const hashToken = crypto
     .createHash("sha256")
@@ -157,7 +165,7 @@ exports.forgotPassword = handleAsync(async (req, res, next) => {
 
   await user.save();
 
-  const resetURL = `${process.env.BASE_URL}/api/v1/users/reset/${resetToken}`;
+  const resetURL = `${process.env.BASE_URL}/${resetToken}`;
 
   try {
     await sendEmail({

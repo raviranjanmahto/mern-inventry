@@ -28,7 +28,7 @@ app.use(globalErrorMiddleware);
 mongoose
   .connect(process.env.DATABASE_URI)
   .then(() => console.log("Database connected successfully!🥰🥰🥰"))
-  .catch(err => console.log("ERROR🎇🎇🎇", err.message));
+  .catch(err => console.log("DATABASE ERROR🎇🎇🎇", err.message));
 
 // SERVER LISTEN
 const port = process.env.PORT || 7002;
